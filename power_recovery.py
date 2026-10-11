@@ -15,6 +15,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
+from statewide_stats import summarize_statewide
 
 FEATURE_URL = ('https://services.arcgis.com/3wFbqsFPLeKqOlIK/arcgis/rest/'
                'services/Power_Outages_Hosted/FeatureServer/1/query')
@@ -136,7 +137,7 @@ def csv_text(rows, headers):
         writer.writerow({key: row.get(key, '') for key in headers})
     return s.getvalue()
 
-def persist(out_dir, counties, regional):
+def persist(out_dir, counties, regional, statewide=None):
     county_csv = out_dir/'county_history.csv'
     regional_csv = out_dir/'regional_history.csv'
     old_county = read_csv(county_csv)
@@ -170,7 +171,15 @@ def persist(out_dir, counties, regional):
             'stale_count': int(x['stale_count']),
         } for x in regional_rows
     ], indent=2)+'\n')
+    if statewide is not None:
+        statewide_path = out_dir/'statewide_history.csv'
+        headers = ('captured_at_utc','county_count','customers_total','customers_out','customers_with_power','percentage_out','percentage_with_power','stale_count','latest_source_updated_at_utc')
+        prior_statewide = read_csv(statewide_path)
+        if prior_statewide and statewide['captured_at_utc'] <= prior_statewide[-1]['captured_at_utc']:
+            raise ValueError('Statewide snapshot is not newer than previous record')
+        write_atomic(statewide_path, csv_text(prior_statewide+[statewide], headers))
     write_atomic(out_dir/'latest.json', json.dumps({
+        'statewide': statewide,
         'source': 'FDEM Power_Outages_Hosted FeatureServer/1',
         'scope': '12 selected Panhandle counties; utility reporting may be asynchronous',
         'retrieved_at_utc': regional['captured_at_utc'],
@@ -194,7 +203,9 @@ def main():
         p.error('--captured-at requires an explicit timezone')
     payload = json.loads(args.input_file.read_text(encoding='utf-8')) if args.input_file else fetch_arcgis()
     counties, regional = normalize(payload, now)
-    count = persist(args.out_dir, counties, regional)
+    statewide = summarize_statewide(payload, now)
+    count = persist(args.out_dir, counties, regional, statewide)
+    print(f'Statewide: {statewide["customers_out"]:,} customers out across {statewide["county_count"]} counties, {statewide["percentage_out"]:.3f}% of accounts.')
     print(f'Success: {regional["county_count"]} counties, {regional["customers_out"]:,} customers out, '
           f'{regional["percentage_with_power"]:.1f}% with power; '
           f'{regional["stale_count"]} counties with source data >6h old; {count} snapshots saved.')
