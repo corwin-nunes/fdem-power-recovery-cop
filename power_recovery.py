@@ -45,7 +45,7 @@ def parse_time(value):
 def fetch_arcgis():
     params = urlencode({
         'where': '1=1', 'outFields': ','.join(FIELD_NAMES),
-        'returnGeometry': 'false', 'f': 'json', 'resultRecordCount': 200,
+        'returnGeometry': 'false', 'f': 'json', 'resultRecordCount': 2000,
     })
     req = Request(FEATURE_URL+'?'+params, headers={
         'User-Agent': 'fdem-power-recovery-cop/1.0 (hourly public GIS monitoring)',
@@ -99,7 +99,23 @@ def normalize(payload, captured_at):
         }
     missing = set(COUNTIES) - set(records)
     if missing:
-        raise ValueError('Missing counties: '+', '.join(sorted(missing)))
+        # Include safe public metadata to distinguish an empty feed from a changed schema,
+        # incomplete pagination, or new county naming. Never accept a partial dataset.
+        sample_names = []
+        for feature in features[:8]:
+            attributes = feature.get('attributes', {}) if isinstance(feature, dict) else {}
+            if isinstance(attributes, dict):
+                sample_names.append(str(attributes.get('COUNTY', '<COUNTY missing>'))[:60])
+            else:
+                sample_names.append('<invalid attributes>')
+        first_attributes = features[0].get('attributes', {}) if features and isinstance(features[0], dict) else {}
+        field_names = sorted(first_attributes.keys()) if isinstance(first_attributes, dict) else []
+        raise ValueError(
+            'Missing counties: ' + ', '.join(sorted(missing)) +
+            f'; received_features={len(features)}' +
+            f'; sample_counties={sample_names}' +
+            f'; sample_fields={field_names[:15]}'
+        )
     ordered = [records[name] for name in COUNTIES]
     total = sum(x['customers_total'] for x in ordered)
     out = sum(x['customers_out'] for x in ordered)
