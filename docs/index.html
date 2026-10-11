@@ -97,7 +97,7 @@ a{color:#167447}
     </div>
     <div class="panel county-card">
       <h2>County recovery details</h2>
-      <p id="county-comparison-note" class="mini county-note">Gray = first available assessment until 24h of history exists · Green = current power availability</p>
+      <p id="county-comparison-note" class="mini county-note">Gray = initial assessment · Green = latest valid power availability</p>
       <div id="counties"></div>
     </div>
     <footer class="data-links">
@@ -219,16 +219,14 @@ function parseCountyHistory(csv){
 }
 function updateCounties(counties,historyByCounty,capturedAt){
   const root=$('counties');root.replaceChildren();
-  const now=Date.parse(capturedAt),cutoff=now-24*60*60*1000;
-  const historyStart=historyByCounty?[...historyByCounty.values()].flatMap(x=>x.length?[x[0].time]:[]):null;
-  const firstTime=historyStart&&historyStart.length?Math.min(...historyStart):null;
-  const fullDay=Number.isFinite(now)&&firstTime!==null&&now-firstTime>=24*60*60*1000;
-  const comparisonLabel=fullDay?'24h-prior available reading':'first available assessment';
+  const now=Date.parse(capturedAt);
+  const firstTimes=historyByCounty?[...historyByCounty.values()].filter(x=>x.length).map(x=>x[0].time):[];
+  const firstTime=firstTimes.length?Math.min(...firstTimes):null;
   $('county-comparison-note').textContent=
-    (fullDay?'Gray = most recent reading at least 24h earlier':
-      'Gray = initial assessment (until 24h of history exists)')+
-    ' · Green = current power availability'+
-    (historyByCounty?'':' · Comparison history temporarily unavailable');
+    (firstTime!==null?'Gray = initial assessment ('+dtg(new Date(firstTime).toISOString())+')':
+      'Gray = initial assessment unavailable')+
+    ' · Green = latest valid assessment'+
+    (historyByCounty?'':' · County history temporarily unavailable');
   for(const c of [...counties].sort((a,b)=>a.percentage_with_power-b.percentage_with_power)){
     const wrapper=document.createElement('div');wrapper.className='county-bar';
     const heading=document.createElement('div');heading.className='county-heading';
@@ -236,7 +234,7 @@ function updateCounties(counties,historyByCounty,capturedAt){
     const value=document.createElement('span');value.textContent=pct(c.percentage_with_power)+' with power';
     heading.append(name,value);wrapper.append(heading);
     const list=(historyByCounty?.get(c.county)||[]).filter(x=>x.time<=now);
-    const previous=list.length?(list.filter(x=>x.time<=cutoff).at(-1)||list[0]):null;
+    const previous=list.length?list[0]:null;
     for(const [v,prior] of [[previous?.value,true],[c.percentage_with_power,false]]){
       if(v===null||v===undefined)continue;
       const track=document.createElement('div'),fill=document.createElement('div');
@@ -246,7 +244,7 @@ function updateCounties(counties,historyByCounty,capturedAt){
     }
     const detail=document.createElement('div');detail.className='county-detail';
     const delta=previous?Number(c.percentage_with_power)-previous.value:null;
-    const movement=delta===null?'':(delta>0?'+':delta<0?'−':'')+Math.abs(delta).toFixed(1)+' pp vs '+comparisonLabel+' · ';
+    const movement=delta===null?'':(delta>0?'+':delta<0?'−':'')+Math.abs(delta).toFixed(1)+' pp since initial · ';
     detail.textContent=fmt(c.customers_out)+' out · '+movement+'Updated '+dtg(c.source_updated_at_utc)+(c.source_is_stale?' · SOURCE >6H OLD':'');
     wrapper.append(detail);root.append(wrapper);
   }
