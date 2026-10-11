@@ -1,11 +1,33 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FDEM Panhandle Power Recovery</title>
-<style>body{font-family:system-ui;background:#f3f6f8;color:#172e3a;margin:0;padding:25px}main{max-width:1050px;margin:auto}.panel{background:white;border-radius:12px;padding:20px;margin:15px 0}h1{margin-bottom:6px}.sub{color:#536775;font-size:14px}.row{display:flex;justify-content:space-between;gap:15px}.bars{margin:12px 0 20px}.track{height:13px;background:#e3e8ea;border-radius:4px;overflow:hidden;margin:3px 0}.fill{height:100%;background:#229458}.prior{background:#8b979e}svg{width:100%;height:auto}a{color:#167447}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0}.metric{background:#f2f6f7;border:1px solid #e0e7ea;border-radius:10px;padding:17px}.metric-label{font-weight:650;font-size:14px}.metric-value{font-size:clamp(27px,3.5vw,39px);font-weight:760;margin-top:7px;line-height:1.2}.metric-detail{color:#536775;font-size:12px;margin-top:7px}.improving{color:#16814b}.worsening{color:#b92f27}.steady{color:#526876}@media(max-width:600px){.metrics{grid-template-columns:1fr}}
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Hurricane Isaias Operational COP — ArcGIS + FDEM Recovery</title>
+<script type="module" src="https://js.arcgis.com/5.1/embeddable-components/"></script>
+<style>body{font-family:system-ui;background:#f3f6f8;color:#172e3a;margin:0;padding:25px}main{max-width:1800px;margin:auto}.panel{background:white;border-radius:12px;padding:20px;margin:15px 0}h1{margin-bottom:6px}.sub{color:#536775;font-size:14px}.row{display:flex;justify-content:space-between;gap:15px}.bars{margin:12px 0 20px}.track{height:13px;background:#e3e8ea;border-radius:4px;overflow:hidden;margin:3px 0}.fill{height:100%;background:#229458}.prior{background:#8b979e}svg{width:100%;height:auto}a{color:#167447}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0}.metric{background:#f2f6f7;border:1px solid #e0e7ea;border-radius:10px;padding:17px}.metric-label{font-weight:650;font-size:14px}.metric-value{font-size:clamp(27px,3.5vw,39px);font-weight:760;margin-top:7px;line-height:1.2}.metric-detail{color:#536775;font-size:12px;margin-top:7px}.improving{color:#16814b}.worsening{color:#b92f27}.steady{color:#526876}@media(max-width:600px){.metrics{grid-template-columns:1fr}}
+.cop-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:18px;align-items:start}
+.map-column,.recovery-column{min-width:0}.map-panel{position:sticky;top:16px;padding:18px}
+.map-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:13px}
+.map-heading h2{margin:0}.map-frame{width:100%;height:clamp(540px,75vh,860px);display:block;border-radius:9px;overflow:hidden;background:#e7eef2}
+.page-intro{margin-bottom:14px}.page-intro h1{margin:0 0 5px}.page-intro p{margin:0}
+.recovery-column>.panel:first-child{margin-top:0}.map-note{margin:12px 0 0}
+@media(max-width:1100px){.cop-layout{grid-template-columns:1fr}.map-panel{position:static}.map-frame{height:550px}}
+@media(max-width:600px){body{padding:10px}.panel{padding:15px}.map-panel{padding:12px}.map-frame{height:480px}.metrics{grid-template-columns:1fr}}
 </style>
-<main><h1>Panhandle Power Recovery</h1><p class="sub">FDEM county outage data · 12 counties · hourly monitoring, subject to source reporting delays</p><div id="status" class="panel">Waiting for first collection…</div>
+<main>
+<header class="page-intro"><h1>Hurricane Isaias — Operational COP</h1><p class="sub">Interactive ArcGIS operational map and hourly FDEM power recovery monitoring · Source reports may be delayed</p></header>
+<div id="status" class="panel" role="status">Waiting for first collection…</div>
+<div class="cop-layout">
+<section class="map-column" aria-label="Interactive operational map">
+<div class="panel map-panel">
+<div class="map-heading"><h2>Operational Map</h2><a href="https://www.arcgis.com/apps/mapviewer/index.html?webmap=f88f62be3c414dcfa62523b395b563d5" target="_blank" rel="noopener noreferrer">Open full ArcGIS map ↗</a></div>
+<arcgis-embedded-map class="map-frame" item-id="f88f62be3c414dcfa62523b395b563d5" theme="light" legend-enabled scroll-enabled basemap-gallery-enabled time-zone-label-enabled center="-85.61516494151459,30.34881452394132" scale="2311162.2171545" portal-url="https://www.arcgis.com"></arcgis-embedded-map>
+<p class="sub map-note">ArcGIS map and layers remain managed separately. Map content requires public sharing to display here.</p>
+</div>
+</section>
+<section class="recovery-column" aria-label="Outage and recovery charts">
 <div class="panel" id="statewide-panel"><h2>Florida Statewide — Customers Without Power</h2><div id="statewide-out" style="font-size:clamp(30px,5vw,52px);font-weight:750;color:#b92f27">Awaiting next collection</div><div id="statewide-details" class="sub">All 67 counties · Separate from the 12-county Panhandle recovery view</div></div>
 <div class="panel"><h2>Regional power availability</h2><div id="summary"></div><h3>Recovery since initial assessment</h3><div class="metrics" role="group" aria-label="Net changes since the initial Panhandle observation"><div class="metric"><div class="metric-label">Net outage reduction</div><div id="net-reduction" class="metric-value steady">—</div><div id="net-reduction-detail" class="metric-detail">Awaiting comparison</div></div><div class="metric"><div class="metric-label">Power availability change</div><div id="availability-change" class="metric-value steady">—</div><div class="metric-detail">Percentage points since first capture</div></div></div><p class="sub" id="recovery-context">Changes are based on reported FDEM snapshots, not confirmed individual restoration events.</p><svg id="trend" viewBox="0 0 740 250" aria-label="Regional power availability trend"></svg><p class="sub">100% = all tracked customers with power. Net power availability is not a count of utility-confirmed restoration events.</p></div>
 <div class="panel"><h2>County health bars</h2><p class="sub">Gray = previous observation; green = current observation</p><div id="counties"></div></div>
 <p class="sub"><a href="data/latest.json">Latest JSON</a> · <a href="data/regional_history.csv">Regional CSV</a> · <a href="data/county_history.csv">County CSV</a></p>
+</section>
+</div>
 <script>
 const $=id=>document.getElementById(id), fmt=n=>Number(n).toLocaleString('en-US'), pct=n=>Number(n).toFixed(1)+'%';
 function lineChart(history){const svg=$('trend');svg.replaceChildren();const ns='http://www.w3.org/2000/svg', make=(tag,attrs,text)=>{const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs||{}))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e};
