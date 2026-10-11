@@ -97,7 +97,7 @@ a{color:#167447}
     </div>
     <div class="panel county-card">
       <h2>County recovery details</h2>
-      <p class="mini county-note">Gray = previous observation · Green = current power availability</p>
+      <p id="county-comparison-note" class="mini county-note">Gray = first available assessment until 24h of history exists · Green = current power availability</p>
       <div id="counties"></div>
     </div>
     <footer class="data-links">
@@ -197,28 +197,61 @@ function updateRegional(latest,history){
   $('availability-change').className=deltaClass;
   $('baseline-info').textContent='Since first capture: '+dtg(baseline.captured_at_utc);
 }
-function updateCounties(counties){
+function parseCountyHistory(csv){
+  const lines=csv.trim().split(/\r?\n/);
+  const headers=(lines.shift()||'').split(',');
+  const countyCol=headers.indexOf('county'),timeCol=headers.indexOf('captured_at_utc'),
+    valueCol=headers.indexOf('percentage_with_power');
+  if(countyCol<0||timeCol<0||valueCol<0)return null;
+  const byCounty=new Map();
+  for(const line of lines){
+    if(!line.trim())continue;
+    const cells=line.split(',');
+    const county=cells[countyCol];
+    const time=Date.parse(cells[timeCol]);
+    const value=Number(cells[valueCol]);
+    if(!county||!Number.isFinite(time)||!Number.isFinite(value))continue;
+    if(!byCounty.has(county))byCounty.set(county,[]);
+    byCounty.get(county).push({time,value});
+  }
+  for(const list of byCounty.values())list.sort((a,b)=>a.time-b.time);
+  return byCounty;
+}
+function updateCounties(counties,historyByCounty,capturedAt){
   const root=$('counties');root.replaceChildren();
+  const now=Date.parse(capturedAt),cutoff=now-24*60*60*1000;
+  const historyStart=historyByCounty?[...historyByCounty.values()].flatMap(x=>x.length?[x[0].time]:[]):null;
+  const firstTime=historyStart&&historyStart.length?Math.min(...historyStart):null;
+  const fullDay=Number.isFinite(now)&&firstTime!==null&&now-firstTime>=24*60*60*1000;
+  const comparisonLabel=fullDay?'24h-prior available reading':'first available assessment';
+  $('county-comparison-note').textContent=
+    (fullDay?'Gray = most recent reading at least 24h earlier':
+      'Gray = initial assessment (until 24h of history exists)')+
+    ' · Green = current power availability'+
+    (historyByCounty?'':' · Comparison history temporarily unavailable');
   for(const c of [...counties].sort((a,b)=>a.percentage_with_power-b.percentage_with_power)){
     const wrapper=document.createElement('div');wrapper.className='county-bar';
     const heading=document.createElement('div');heading.className='county-heading';
     const name=document.createElement('span');name.textContent=c.county;
     const value=document.createElement('span');value.textContent=pct(c.percentage_with_power)+' with power';
     heading.append(name,value);wrapper.append(heading);
-    for(const [v,prior] of [[c.previous_percentage_with_power,true],[c.percentage_with_power,false]]){
+    const list=(historyByCounty?.get(c.county)||[]).filter(x=>x.time<=now);
+    const previous=list.length?(list.filter(x=>x.time<=cutoff).at(-1)||list[0]):null;
+    for(const [v,prior] of [[previous?.value,true],[c.percentage_with_power,false]]){
       if(v===null||v===undefined)continue;
       const track=document.createElement('div'),fill=document.createElement('div');
-      track.className='bar-track';
-      fill.className='bar-fill'+(prior?' prior':'');
+      track.className='bar-track';fill.className='bar-fill'+(prior?' prior':'');
       fill.style.width=Math.min(100,Math.max(0,Number(v)))+'%';
       track.append(fill);wrapper.append(track);
     }
     const detail=document.createElement('div');detail.className='county-detail';
-    detail.textContent=fmt(c.customers_out)+' out · Updated '+dtg(c.source_updated_at_utc)+(c.source_is_stale?' · SOURCE >6H OLD':'');
+    const delta=previous?Number(c.percentage_with_power)-previous.value:null;
+    const movement=delta===null?'':(delta>0?'+':delta<0?'−':'')+Math.abs(delta).toFixed(1)+' pp vs '+comparisonLabel+' · ';
+    detail.textContent=fmt(c.customers_out)+' out · '+movement+'Updated '+dtg(c.source_updated_at_utc)+(c.source_is_stale?' · SOURCE >6H OLD':'');
     wrapper.append(detail);root.append(wrapper);
   }
 }
-function render(latest,history){
+function render(latest,history,countyHistory){
   const r=latest.regional,w=latest.statewide;
   if(w){
     $('statewide-out').textContent=fmt(w.customers_out);
@@ -227,14 +260,16 @@ function render(latest,history){
   }
   updateRegional(latest,history);
   trendChart(history);
-  updateCounties(latest.counties);
+  updateCounties(latest.counties,countyHistory,latest.retrieved_at_utc);
 }
 Promise.all([
   fetch('data/latest.json?'+Date.now()),
-  fetch('data/regional_history.json?'+Date.now())
-]).then(async([latest,history])=>{
+  fetch('data/regional_history.json?'+Date.now()),
+  fetch('data/county_history.csv?'+Date.now())
+]).then(async([latest,history,counties])=>{
   if(!latest.ok||!history.ok)throw new Error('FDEM data not published');
-  render(await latest.json(),await history.json());
+  const countyHistory=counties.ok?parseCountyHistory(await counties.text()):null;
+  render(await latest.json(),await history.json(),countyHistory);
 }).catch(err=>{
   $('statewide-out').textContent='Data unavailable';
   $('statewide-details').textContent='Unable to retrieve FDEM data. Check GitHub Actions and the source feed.';
