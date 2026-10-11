@@ -1,8 +1,9 @@
 <!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>FDEM Panhandle Power Recovery</title>
-<style>body{font-family:system-ui;background:#f3f6f8;color:#172e3a;margin:0;padding:25px}main{max-width:1050px;margin:auto}.panel{background:white;border-radius:12px;padding:20px;margin:15px 0}h1{margin-bottom:6px}.sub{color:#536775;font-size:14px}.row{display:flex;justify-content:space-between;gap:15px}.bars{margin:12px 0 20px}.track{height:13px;background:#e3e8ea;border-radius:4px;overflow:hidden;margin:3px 0}.fill{height:100%;background:#229458}.prior{background:#8b979e}svg{width:100%;height:auto}a{color:#167447}</style>
+<style>body{font-family:system-ui;background:#f3f6f8;color:#172e3a;margin:0;padding:25px}main{max-width:1050px;margin:auto}.panel{background:white;border-radius:12px;padding:20px;margin:15px 0}h1{margin-bottom:6px}.sub{color:#536775;font-size:14px}.row{display:flex;justify-content:space-between;gap:15px}.bars{margin:12px 0 20px}.track{height:13px;background:#e3e8ea;border-radius:4px;overflow:hidden;margin:3px 0}.fill{height:100%;background:#229458}.prior{background:#8b979e}svg{width:100%;height:auto}a{color:#167447}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0}.metric{background:#f2f6f7;border:1px solid #e0e7ea;border-radius:10px;padding:17px}.metric-label{font-weight:650;font-size:14px}.metric-value{font-size:clamp(27px,3.5vw,39px);font-weight:760;margin-top:7px;line-height:1.2}.metric-detail{color:#536775;font-size:12px;margin-top:7px}.improving{color:#16814b}.worsening{color:#b92f27}.steady{color:#526876}@media(max-width:600px){.metrics{grid-template-columns:1fr}}
+</style>
 <main><h1>Panhandle Power Recovery</h1><p class="sub">FDEM county outage data · 12 counties · hourly monitoring, subject to source reporting delays</p><div id="status" class="panel">Waiting for first collection…</div>
 <div class="panel" id="statewide-panel"><h2>Florida Statewide — Customers Without Power</h2><div id="statewide-out" style="font-size:clamp(30px,5vw,52px);font-weight:750;color:#b92f27">Awaiting next collection</div><div id="statewide-details" class="sub">All 67 counties · Separate from the 12-county Panhandle recovery view</div></div>
-<div class="panel"><h2>Regional power availability</h2><div id="summary"></div><svg id="trend" viewBox="0 0 740 250" aria-label="Regional power availability trend"></svg><p class="sub">100% = all tracked customers with power. Net power availability is not a count of utility-confirmed restoration events.</p></div>
+<div class="panel"><h2>Regional power availability</h2><div id="summary"></div><h3>Recovery since initial assessment</h3><div class="metrics" role="group" aria-label="Net changes since the initial Panhandle observation"><div class="metric"><div class="metric-label">Net outage reduction</div><div id="net-reduction" class="metric-value steady">—</div><div id="net-reduction-detail" class="metric-detail">Awaiting comparison</div></div><div class="metric"><div class="metric-label">Power availability change</div><div id="availability-change" class="metric-value steady">—</div><div class="metric-detail">Percentage points since first capture</div></div></div><p class="sub" id="recovery-context">Changes are based on reported FDEM snapshots, not confirmed individual restoration events.</p><svg id="trend" viewBox="0 0 740 250" aria-label="Regional power availability trend"></svg><p class="sub">100% = all tracked customers with power. Net power availability is not a count of utility-confirmed restoration events.</p></div>
 <div class="panel"><h2>County health bars</h2><p class="sub">Gray = previous observation; green = current observation</p><div id="counties"></div></div>
 <p class="sub"><a href="data/latest.json">Latest JSON</a> · <a href="data/regional_history.csv">Regional CSV</a> · <a href="data/county_history.csv">County CSV</a></p>
 <script>
@@ -15,8 +16,26 @@ if(points.length>1)make('polyline',{points:points.map(p=>p.join(',')).join(' '),
 for(const p of points)make('circle',{cx:p[0],cy:p[1],r:3,fill:'#229458'});
 make('text',{x:52,y:231,'font-size':11},new Date(values[0].captured_at_utc).toLocaleString());make('text',{x:720,y:231,'text-anchor':'end','font-size':11},new Date(values.at(-1).captured_at_utc).toLocaleString())
 }
+function recoveryIndicators(latest,history){
+  if(!Array.isArray(history)||!history.length)return;
+  const baseline=history[0], current=latest.regional;
+  const reduction=Number(baseline.customers_out)-Number(current.customers_out);
+  const difference=Number(current.percentage_with_power)-Number(baseline.percentage_with_power);
+  const countLabel=(reduction>0?'+':reduction<0?'−':'')+fmt(Math.abs(reduction));
+  const ppLabel=(difference>0?'+':difference<0?'−':'')+Math.abs(difference).toFixed(1)+' pp';
+  const statusClass=reduction>0?'improving':reduction<0?'worsening':'steady';
+  const count=$('net-reduction'),percentage=$('availability-change');
+  count.className='metric-value '+statusClass;
+  percentage.className='metric-value '+(difference>0?'improving':difference<0?'worsening':'steady');
+  count.textContent=countLabel;
+  percentage.textContent=ppLabel;
+  $('net-reduction-detail').textContent=reduction>0?'Fewer customers without power':reduction<0?'More customers without power':'No net change reported';
+  const baselineTime=new Date(baseline.captured_at_utc).toLocaleString();
+  const stale=Number(current.stale_count)||0;
+  $('recovery-context').textContent='Compared with first capture ('+baselineTime+'). '+(stale?'Caution: '+stale+' of '+current.county_count+' county source records are over six hours old. ':'')+'Changes represent net reported outages, not independently verified utility restoration events.';
+}
 function render(latest,history){if(latest.statewide){const w=latest.statewide;$('statewide-out').textContent=fmt(w.customers_out);$('statewide-details').textContent=pct(w.percentage_out)+' of '+fmt(w.customers_total)+' tracked customers · '+w.county_count+' counties · '+w.stale_count+' source records older than 6 hours · Collected '+new Date(w.captured_at_utc).toLocaleString();}$('status').textContent='Last collected: '+new Date(latest.retrieved_at_utc).toLocaleString()+' · '+latest.regional.stale_count+' source records older than 6 hours';
-$('summary').textContent=pct(latest.regional.percentage_with_power)+' with power · '+fmt(latest.regional.customers_out)+' without power · '+fmt(latest.regional.customers_total)+' tracked';lineChart(history);
+$('summary').textContent=pct(latest.regional.percentage_with_power)+' with power · '+fmt(latest.regional.customers_out)+' without power · '+fmt(latest.regional.customers_total)+' tracked';lineChart(history);recoveryIndicators(latest,history);
 const root=$('counties');root.replaceChildren();for(const c of [...latest.counties].sort((a,b)=>a.percentage_with_power-b.percentage_with_power)){const wrapper=document.createElement('div');wrapper.className='bars';let h=document.createElement('div');h.className='row';let name=document.createElement('strong');name.textContent=c.county;let value=document.createElement('span');value.textContent=pct(c.percentage_with_power)+' with power';h.append(name,value);wrapper.append(h);
 for(const [v,cls] of [[c.previous_percentage_with_power,'prior'],[c.percentage_with_power,'']]){if(v==null)continue;const track=document.createElement('div'), fill=document.createElement('div');track.className='track';fill.className='fill '+cls;fill.style.width=Math.min(100,Math.max(0,Number(v)))+'%';track.append(fill);wrapper.append(track)}
 const detail=document.createElement('small');detail.className='sub';detail.textContent=fmt(c.customers_out)+' out · source updated '+new Date(c.source_updated_at_utc).toLocaleString()+(c.source_is_stale?' · STALE SOURCE':'');wrapper.append(detail);root.append(wrapper)}
