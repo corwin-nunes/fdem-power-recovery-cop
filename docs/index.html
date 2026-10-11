@@ -14,8 +14,6 @@ h1,h2,h3,p{margin-top:0}
 h1{font-size:clamp(22px,2vw,29px);line-height:1.18;margin-bottom:5px}
 h2{font-size:19px;line-height:1.2;margin-bottom:12px}
 a{color:#167447}
-.page-header{padding:0 2px 12px}
-.status-line{margin:0;color:#516673;font-size:13px;line-height:1.5;font-variant-numeric:tabular-nums}
 .cop-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(365px,2fr);gap:15px;align-items:stretch}
 .map-column,.recovery-column{min-width:0}
 .map-column{align-self:stretch}
@@ -60,10 +58,6 @@ a{color:#167447}
 <body>
 
 <main>
-<header class="page-header">
-  
-  <p id="status" class="status-line" role="status">Awaiting the first FDEM collection… Source reports may be delayed.</p>
-</header>
 <div class="cop-layout">
   <section class="map-column" aria-label="Interactive ArcGIS operational map">
     <div class="panel map-panel">
@@ -206,8 +200,6 @@ function updateCounties(counties){
 }
 function render(latest,history){
   const r=latest.regional,w=latest.statewide;
-  $('status').textContent='Last collected: '+dtg(latest.retrieved_at_utc)+' · '+r.stale_count+
-    ' of '+r.county_count+' county source records older than 6 hours · Source reports may be delayed.';
   if(w){
     $('statewide-out').textContent=fmt(w.customers_out);
     $('statewide-details').textContent=pct(w.percentage_out)+' of '+fmt(w.customers_total)+
@@ -224,7 +216,8 @@ Promise.all([
   if(!latest.ok||!history.ok)throw new Error('FDEM data not published');
   render(await latest.json(),await history.json());
 }).catch(err=>{
-  $('status').textContent='Data unavailable: '+err.message+' · Check GitHub Actions and the source feed.';
+  $('statewide-out').textContent='Data unavailable';
+  $('statewide-details').textContent='Unable to retrieve FDEM data. Check GitHub Actions and the source feed.';
 });
 </script>
 </body>
