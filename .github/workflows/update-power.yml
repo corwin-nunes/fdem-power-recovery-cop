@@ -23,8 +23,19 @@ jobs:
           python-version: '3.12'
       - name: Run collector tests
         run: python -m unittest discover -s tests -v
-      - name: Capture FDEM county records
-        run: python power_recovery.py
+      - name: Capture FDEM county records (retry transient feed failures)
+        run: |
+          for attempt in 1 2 3; do
+            if python power_recovery.py; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "::warning::FDEM collection did not pass validation (attempt $attempt/3). Retrying in 20 seconds."
+              sleep 20
+            fi
+          done
+          echo "::error::FDEM feed unavailable or incomplete after 3 attempts. Previous valid snapshots remain unchanged."
+          exit 1
       - name: Commit archived snapshots
         run: |
           git config user.name 'github-actions[bot]'
@@ -34,19 +45,24 @@ jobs:
             git commit -m "FDEM hourly snapshot $(date -u +'%Y-%m-%dT%H:%MZ')"
             git push origin HEAD:main
           fi
+  deploy:
+    needs: collect
+    if: ${{ always() && !cancelled() }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Check out latest saved dashboard and valid snapshots
+        uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload dashboard
         uses: actions/upload-pages-artifact@v4
         with:
           path: docs
-  deploy:
-    needs: collect
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-    steps:
       - name: Deploy dashboard
         id: deploy
         uses: actions/deploy-pages@v4
