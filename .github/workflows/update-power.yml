@@ -1,9 +1,8 @@
 name: Update FDEM hourly power recovery
 on:
   workflow_dispatch:
-  # After testing the first run, enable this hourly schedule:
-  # schedule:
-  #   - cron: '17 * * * *'
+  schedule:
+    - cron: '17 * * * *'
 permissions:
   contents: write
   pages: write
