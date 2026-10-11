@@ -93,7 +93,7 @@ a{color:#167447}
     <div class="panel trend-card">
       <h2>Regional recovery trend</h2>
       <svg id="trend" class="trend-plot" viewBox="0 0 740 210" aria-label="Power availability over time, hourly FDEM observations" role="img"></svg>
-      <p class="mini">Hourly observations · Net power availability, not confirmed individual restorations</p>
+      <p class="mini">Latest observation per hour · Dashed line = gap in collection history · Net power availability, not confirmed individual restorations</p>
     </div>
     <div class="panel county-card">
       <h2>County recovery details</h2>
@@ -129,34 +129,54 @@ function trendChart(history){
   const svg=$('trend');svg.replaceChildren();
   if(!Array.isArray(history)||!history.length)return;
   const ns='http://www.w3.org/2000/svg';
-  const make=(tag,attrs,label)=>{
+  const make=(tag,attrs,label,parent=svg)=>{
     const e=document.createElementNS(ns,tag);
     for(const [k,v] of Object.entries(attrs||{}))e.setAttribute(k,v);
     if(label!==undefined)e.textContent=label;
-    svg.appendChild(e);return e;
+    parent.appendChild(e);return e;
   };
-  for(let v=0;v<=100;v+=25){
-    const y=162-v*1.35;
-    make('line',{x1:52,x2:724,y1:y,y2:y,stroke:'#dce7ea'});
-    make('text',{x:45,y:y+4,'font-size':11,'text-anchor':'end',fill:'#566976'},v+'%');
+  // Keep every original collection in the CSV. Only simplify chart display.
+  // Group observations into clock-hour buckets and retain the final capture per hour.
+  const hours=new Map();
+  for(const r of history){
+    const at=Date.parse(r.captured_at_utc);
+    const availability=Number(r.percentage_with_power);
+    if(!Number.isFinite(at)||!Number.isFinite(availability))continue;
+    const hour=Math.floor(at/3600000);
+    const existing=hours.get(hour);
+    if(!existing||at>existing.at)hours.set(hour,{hour,at,availability,record:r});
   }
-  const values=history.slice(-72);
-  const start=Date.parse(values[0].captured_at_utc);
-  const end=Date.parse(values[values.length-1].captured_at_utc);
-  const points=values.map(r=>{
-    const current=Date.parse(r.captured_at_utc);
-    const x=end===start?388:52+(current-start)/(end-start)*672;
-    const y=162-1.35*Number(r.percentage_with_power);
-    return [x,y];
+  const points=[...hours.values()].sort((a,b)=>a.hour-b.hour).slice(-72);
+  if(!points.length)return;
+  const start=points[0].hour,end=points[points.length-1].hour;
+  const x=hour=>start===end?388:52+(hour-start)/(end-start)*672;
+  const y=value=>162-1.35*value;
+  for(let v=0;v<=100;v+=25){
+    const yy=y(v);
+    make('line',{x1:52,x2:724,y1:yy,y2:yy,stroke:'#dce7ea'});
+    make('text',{x:45,y:yy+4,'font-size':11,'text-anchor':'end',fill:'#566976'},v+'%');
+  }
+  // Clock-hour labels rather than snapshots taken minutes apart.
+  const tickHours=start===end?[start]:[0,1,2,3,4].map(i=>start+Math.round((end-start)*i/4));
+  [...new Set(tickHours)].forEach((hour,i,arr)=>{
+    make('text',{
+      x:x(hour),y:190,'font-size':10,fill:'#526674',
+      'text-anchor':i===0?'start':i===arr.length-1?'end':'middle'
+    },dtg(new Date(hour*3600000).toISOString()));
   });
-  if(points.length>1)make('polyline',{
-    points:points.map(p=>p.join(',')).join(' '),fill:'none',
-    stroke:'#269b57','stroke-width':3,'stroke-linejoin':'round'
-  });
-  points.forEach((p,i)=>{if(i===0||i===points.length-1||points.length<=10)
-    make('circle',{cx:p[0],cy:p[1],r:3.2,fill:'#269b57'});});
-  make('text',{x:52,y:190,'font-size':11,fill:'#526674'},dtg(values[0].captured_at_utc));
-  make('text',{x:724,y:190,'text-anchor':'end','font-size':11,fill:'#526674'},dtg(values[values.length-1].captured_at_utc));
+  for(let i=1;i<points.length;i++){
+    const a=points[i-1],b=points[i];
+    const gap=b.hour-a.hour;
+    make('line',{
+      x1:x(a.hour),y1:y(a.availability),x2:x(b.hour),y2:y(b.availability),
+      stroke:'#269b57','stroke-width':3,
+      ...(gap>1?{'stroke-dasharray':'6 5'}:{})
+    });
+  }
+  for(const p of points){
+    const circle=make('circle',{cx:x(p.hour),cy:y(p.availability),r:4,fill:'#269b57'});
+    make('title',{},dtg(p.record.captured_at_utc)+' · '+p.availability.toFixed(1)+'% with power',circle);
+  }
 }
 function updateRegional(latest,history){
   const current=latest.regional;
