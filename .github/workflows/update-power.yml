@@ -1,0 +1,53 @@
+name: Update FDEM hourly power recovery
+on:
+  workflow_dispatch:
+  # After testing the first run, enable this hourly schedule:
+  # schedule:
+  #   - cron: '17 * * * *'
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: fdem-hourly-power-cop
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run collector tests
+        run: python -m unittest discover -s tests -v
+      - name: Capture FDEM county records
+        run: python power_recovery.py
+      - name: Commit archived snapshots
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/data/
+          if ! git diff --cached --quiet; then
+            git commit -m "FDEM hourly snapshot $(date -u +'%Y-%m-%dT%H:%MZ')"
+            git push origin HEAD:main
+          fi
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload dashboard
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs
+  deploy:
+    needs: collect
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Deploy dashboard
+        id: deploy
+        uses: actions/deploy-pages@v4
