@@ -1,66 +1,231 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Hurricane Isaias Operational COP — ArcGIS + FDEM Recovery</title>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Current power situation | Hurricane Isaias COP</title>
 <script type="module" src="https://js.arcgis.com/5.1/embeddable-components/"></script>
-<style>body{font-family:system-ui;background:#f3f6f8;color:#172e3a;margin:0;padding:25px}main{max-width:1800px;margin:auto}.panel{background:white;border-radius:12px;padding:20px;margin:15px 0}h1{margin-bottom:6px}.sub{color:#536775;font-size:14px}.row{display:flex;justify-content:space-between;gap:15px}.bars{margin:12px 0 20px}.track{height:13px;background:#e3e8ea;border-radius:4px;overflow:hidden;margin:3px 0}.fill{height:100%;background:#229458}.prior{background:#8b979e}svg{width:100%;height:auto}a{color:#167447}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0}.metric{background:#f2f6f7;border:1px solid #e0e7ea;border-radius:10px;padding:17px}.metric-label{font-weight:650;font-size:14px}.metric-value{font-size:clamp(27px,3.5vw,39px);font-weight:760;margin-top:7px;line-height:1.2}.metric-detail{color:#536775;font-size:12px;margin-top:7px}.improving{color:#16814b}.worsening{color:#b92f27}.steady{color:#526876}@media(max-width:600px){.metrics{grid-template-columns:1fr}}
-.cop-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:18px;align-items:stretch}
-.map-column,.recovery-column{min-width:0}.map-column{align-self:stretch}.map-panel{position:sticky;top:16px;padding:18px}
-.map-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:13px}
-.map-heading h2{margin:0}.map-frame{width:100%;height:clamp(540px,75vh,860px);display:block;border-radius:9px;overflow:hidden;background:#e7eef2}
-.page-intro{margin-bottom:14px}.page-intro h1{margin:0 0 5px}.page-intro p{margin:0}
-.recovery-column>.panel:first-child{margin-top:0}.map-note{margin:12px 0 0}
-@media(max-width:1100px){.cop-layout{grid-template-columns:1fr}.map-panel{position:static}.map-frame{height:550px}}
-@media(max-width:600px){body{padding:10px}.panel{padding:15px}.map-panel{padding:12px}.map-frame{height:480px}.metrics{grid-template-columns:1fr}}
+<style>
+:root{color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:#f1f4f6;color:#183041;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1800px;margin:0 auto;padding:14px 18px 20px}
+h1,h2,h3,p{margin-top:0}
+h1{font-size:clamp(22px,2vw,29px);line-height:1.18;margin-bottom:5px}
+h2{font-size:19px;line-height:1.2;margin-bottom:12px}
+a{color:#167447}
+.page-header{padding:0 2px 12px}
+.status-line{margin:0;color:#516673;font-size:13px;line-height:1.5;font-variant-numeric:tabular-nums}
+.cop-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(365px,2fr);gap:15px;align-items:stretch}
+.map-column,.recovery-column{min-width:0}
+.map-column{align-self:stretch}
+.map-panel{position:sticky;top:12px}
+.panel{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(13,31,47,.035)}
+.map-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
+.map-heading h2{margin:0}
+.map-heading a{font-size:12px;white-space:nowrap}
+.map-frame{display:block;width:100%;height:clamp(490px,76vh,880px);border-radius:8px;overflow:hidden;background:#e6edf1}
+.recovery-column{display:flex;flex-direction:column;gap:12px}
+.eyebrow{font-size:12px;font-weight:750;text-transform:uppercase;letter-spacing:.025em;color:#425967;line-height:1.4}
+.statewide-number{font-size:clamp(33px,3.6vw,49px);font-weight:760;color:#ac382c;line-height:1.18;margin:7px 0}
+.mini{color:#526674;font-size:12px;line-height:1.45;margin:0}
+.regional-card h2,.trend-card h2,.county-card h2{margin-bottom:10px}
+.region-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.region-metric{padding:11px 12px;background:#f3f6f7;border-radius:9px;min-width:0}
+.region-value{font-size:clamp(26px,2.5vw,37px);font-weight:750;line-height:1.15;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.region-label{font-size:12px;color:#536774;line-height:1.3;margin-top:5px}
+.improving{color:#25854a}
+.worsening{color:#b3372d}
+.steady{color:#506472}
+.change-line{margin:12px 0 7px;font-size:13px;color:#4b6170}
+.change-line strong{font-size:20px;margin-right:6px;font-variant-numeric:tabular-nums}
+.trend-plot{display:block;width:100%;height:175px}
+.trend-card .mini{margin-top:1px}
+.county-card{margin-top:2px}
+.county-bar{margin:0 0 16px}
+.county-heading{display:flex;justify-content:space-between;gap:12px;font-size:13px;font-weight:700;margin-bottom:5px}
+.county-heading span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
+.bar-track{height:11px;background:#e3e8ea;border-radius:3px;overflow:hidden;margin:3px 0}
+.bar-fill{height:100%;background:#269b57}
+.bar-fill.prior{background:#89959b}
+.county-detail{font-size:11px;color:#536774;line-height:1.4;margin-top:5px}
+.county-note{margin-bottom:14px}
+.data-links{font-size:12px;line-height:1.7;padding:2px 3px 12px}
+.data-notes{font-size:12px;color:#536774;margin-top:5px}
+.data-notes p{margin:6px 0}
+@media(max-width:1050px){.cop-layout{grid-template-columns:1fr}.map-panel{position:static}.map-frame{height:530px}.recovery-column{gap:12px}}
+@media(max-width:600px){main{padding:10px}.panel{padding:13px}.map-frame{height:470px}.region-metrics{grid-template-columns:1fr}}
 </style>
+</head>
+<body>
+
 <main>
-<header class="page-intro"><h1>Hurricane Isaias — Operational COP</h1><p class="sub">Interactive ArcGIS operational map and hourly FDEM power recovery monitoring · Source reports may be delayed</p></header>
-<div id="status" class="panel" role="status">Waiting for first collection…</div>
+<header class="page-header">
+  <h1>Current power situation</h1>
+  <p id="status" class="status-line" role="status">Awaiting the first FDEM collection… Source reports may be delayed.</p>
+</header>
 <div class="cop-layout">
-<section class="map-column" aria-label="Interactive operational map">
-<div class="panel map-panel">
-<div class="map-heading"><h2>Operational Map</h2><a href="https://www.arcgis.com/apps/mapviewer/index.html?webmap=f88f62be3c414dcfa62523b395b563d5" target="_blank" rel="noopener noreferrer">Open full ArcGIS map ↗</a></div>
-<arcgis-embedded-map class="map-frame" item-id="f88f62be3c414dcfa62523b395b563d5" theme="light" legend-enabled scroll-enabled basemap-gallery-enabled time-zone-label-enabled center="-85.61516494151459,30.34881452394132" scale="2311162.2171545" portal-url="https://www.arcgis.com"></arcgis-embedded-map>
-<p class="sub map-note">ArcGIS map and layers remain managed separately. Map content requires public sharing to display here.</p>
+  <section class="map-column" aria-label="Interactive ArcGIS operational map">
+    <div class="panel map-panel">
+      <div class="map-heading">
+        <h2>Operational Map</h2>
+        <a href="https://www.arcgis.com/apps/mapviewer/index.html?webmap=f88f62be3c414dcfa62523b395b563d5" target="_blank" rel="noopener noreferrer">Open full ArcGIS map ↗</a>
+      </div>
+      <arcgis-embedded-map class="map-frame" item-id="f88f62be3c414dcfa62523b395b563d5" theme="light" legend-enabled scroll-enabled basemap-gallery-enabled time-zone-label-enabled center="-85.61516494151459,30.34881452394132" scale="2311162.2171545" portal-url="https://www.arcgis.com"></arcgis-embedded-map>
+    </div>
+  </section>
+  <section class="recovery-column" aria-label="FDEM outage and recovery charts">
+    <div class="panel" id="statewide-panel">
+      <div class="eyebrow">Florida statewide · Customers without power</div>
+      <div id="statewide-out" class="statewide-number">—</div>
+      <p id="statewide-details" class="mini">67-county FDEM total · Awaiting update</p>
+    </div>
+    <div class="panel regional-card">
+      <h2>Panhandle · Power recovery</h2>
+      <div class="region-metrics">
+        <div class="region-metric">
+          <div id="region-availability" class="region-value">—</div>
+          <div class="region-label">Customers with power</div>
+        </div>
+        <div class="region-metric">
+          <div id="net-reduction" class="region-value steady">—</div>
+          <div id="net-reduction-detail" class="region-label">Net fewer outages</div>
+        </div>
+      </div>
+      <p class="change-line"><strong id="availability-change" class="steady">—</strong> Change in power availability since initial assessment</p>
+      <p id="regional-details" class="mini">12 selected counties · Awaiting update</p>
+      <p id="baseline-info" class="mini" style="margin-top:3px">Comparing with first saved observation</p>
+    </div>
+    <div class="panel trend-card">
+      <h2>Regional recovery trend</h2>
+      <svg id="trend" class="trend-plot" viewBox="0 0 740 210" aria-label="Power availability over time, hourly FDEM observations" role="img"></svg>
+      <p class="mini">Hourly observations · Net power availability, not confirmed individual restorations</p>
+    </div>
+    <div class="panel county-card">
+      <h2>County recovery details</h2>
+      <p class="mini county-note">Gray = previous observation · Green = current power availability</p>
+      <div id="counties"></div>
+    </div>
+    <footer class="data-links">
+      <a href="data/latest.json">Latest JSON</a> ·
+      <a href="data/regional_history.csv">Regional CSV</a> ·
+      <a href="data/county_history.csv">County CSV</a>
+      <details class="data-notes"><summary>Data and reporting notes</summary>
+      <p>FDEM utility observations may be delayed or updated at different times by county. Net outage reduction is the change between collected records, not a count of independently confirmed utility restorations.</p>
+      <p>Percentages for the 12-county Panhandle area use its customer total. Florida statewide percentages use all 67 counties.</p></details>
+    </footer>
+  </section>
 </div>
-</section>
-<section class="recovery-column" aria-label="Outage and recovery charts">
-<div class="panel" id="statewide-panel"><h2>Florida Statewide — Customers Without Power</h2><div id="statewide-out" style="font-size:clamp(30px,5vw,52px);font-weight:750;color:#b92f27">Awaiting next collection</div><div id="statewide-details" class="sub">All 67 counties · Separate from the 12-county Panhandle recovery view</div></div>
-<div class="panel"><h2>Regional power availability</h2><div id="summary"></div><h3>Recovery since initial assessment</h3><div class="metrics" role="group" aria-label="Net changes since the initial Panhandle observation"><div class="metric"><div class="metric-label">Net outage reduction</div><div id="net-reduction" class="metric-value steady">—</div><div id="net-reduction-detail" class="metric-detail">Awaiting comparison</div></div><div class="metric"><div class="metric-label">Power availability change</div><div id="availability-change" class="metric-value steady">—</div><div class="metric-detail">Percentage points since first capture</div></div></div><p class="sub" id="recovery-context">Changes are based on reported FDEM snapshots, not confirmed individual restoration events.</p><svg id="trend" viewBox="0 0 740 250" aria-label="Regional power availability trend"></svg><p class="sub">100% = all tracked customers with power. Net power availability is not a count of utility-confirmed restoration events.</p></div>
-<div class="panel"><h2>County health bars</h2><p class="sub">Gray = previous observation; green = current observation</p><div id="counties"></div></div>
-<p class="sub"><a href="data/latest.json">Latest JSON</a> · <a href="data/regional_history.csv">Regional CSV</a> · <a href="data/county_history.csv">County CSV</a></p>
-</section>
-</div>
+</main>
+
 <script>
-const $=id=>document.getElementById(id), fmt=n=>Number(n).toLocaleString('en-US'), pct=n=>Number(n).toFixed(1)+'%';
-function lineChart(history){const svg=$('trend');svg.replaceChildren();const ns='http://www.w3.org/2000/svg', make=(tag,attrs,text)=>{const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs||{}))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;svg.appendChild(e);return e};
-for(let v=0;v<=100;v+=25){let y=205-v*1.7;make('line',{x1:52,x2:720,y1:y,y2:y,stroke:'#dde7e8'});make('text',{x:45,y:y+4,'font-size':11,'text-anchor':'end',fill:'#64717b'},v+'%')}
-if(!history.length)return;const values=history.slice(-72),first=Date.parse(values[0].captured_at_utc),last=Date.parse(values.at(-1).captured_at_utc);
-const points=values.map(d=>[(first===last?386:52+(Date.parse(d.captured_at_utc)-first)/(last-first)*668),205-1.7*Number(d.percentage_with_power)]);
-if(points.length>1)make('polyline',{points:points.map(p=>p.join(',')).join(' '),fill:'none',stroke:'#229458','stroke-width':3});
-for(const p of points)make('circle',{cx:p[0],cy:p[1],r:3,fill:'#229458'});
-make('text',{x:52,y:231,'font-size':11},new Date(values[0].captured_at_utc).toLocaleString());make('text',{x:720,y:231,'text-anchor':'end','font-size':11},new Date(values.at(-1).captured_at_utc).toLocaleString())
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n).toLocaleString('en-US');
+const pct=n=>Number(n).toFixed(1)+'%';
+function dtg(value){
+  const d=new Date(value);
+  if(Number.isNaN(d.getTime()))return 'Timestamp unavailable';
+  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{
+    timeZone:'America/New_York',day:'2-digit',month:'short',year:'2-digit',
+    hour:'2-digit',minute:'2-digit',hourCycle:'h23',timeZoneName:'short'
+  }).formatToParts(d).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+  return parts.day+parts.month.toUpperCase()+parts.year+' '+parts.hour+parts.minute+' '+parts.timeZoneName;
 }
-function recoveryIndicators(latest,history){
+function trendChart(history){
+  const svg=$('trend');svg.replaceChildren();
   if(!Array.isArray(history)||!history.length)return;
-  const baseline=history[0], current=latest.regional;
+  const ns='http://www.w3.org/2000/svg';
+  const make=(tag,attrs,label)=>{
+    const e=document.createElementNS(ns,tag);
+    for(const [k,v] of Object.entries(attrs||{}))e.setAttribute(k,v);
+    if(label!==undefined)e.textContent=label;
+    svg.appendChild(e);return e;
+  };
+  for(let v=0;v<=100;v+=25){
+    const y=162-v*1.35;
+    make('line',{x1:52,x2:724,y1:y,y2:y,stroke:'#dce7ea'});
+    make('text',{x:45,y:y+4,'font-size':11,'text-anchor':'end',fill:'#566976'},v+'%');
+  }
+  const values=history.slice(-72);
+  const start=Date.parse(values[0].captured_at_utc);
+  const end=Date.parse(values[values.length-1].captured_at_utc);
+  const points=values.map(r=>{
+    const current=Date.parse(r.captured_at_utc);
+    const x=end===start?388:52+(current-start)/(end-start)*672;
+    const y=162-1.35*Number(r.percentage_with_power);
+    return [x,y];
+  });
+  if(points.length>1)make('polyline',{
+    points:points.map(p=>p.join(',')).join(' '),fill:'none',
+    stroke:'#269b57','stroke-width':3,'stroke-linejoin':'round'
+  });
+  points.forEach((p,i)=>{if(i===0||i===points.length-1||points.length<=10)
+    make('circle',{cx:p[0],cy:p[1],r:3.2,fill:'#269b57'});});
+  make('text',{x:52,y:190,'font-size':11,fill:'#526674'},dtg(values[0].captured_at_utc));
+  make('text',{x:724,y:190,'text-anchor':'end','font-size':11,fill:'#526674'},dtg(values[values.length-1].captured_at_utc));
+}
+function updateRegional(latest,history){
+  const current=latest.regional;
+  $('region-availability').textContent=pct(current.percentage_with_power);
+  $('regional-details').textContent=fmt(current.customers_out)+' currently out · '+fmt(current.customers_total)+' tracked · '+current.county_count+' counties';
+  if(!Array.isArray(history)||history.length===0)return;
+  const baseline=history[0];
   const reduction=Number(baseline.customers_out)-Number(current.customers_out);
-  const difference=Number(current.percentage_with_power)-Number(baseline.percentage_with_power);
-  const countLabel=(reduction>0?'+':reduction<0?'−':'')+fmt(Math.abs(reduction));
-  const ppLabel=(difference>0?'+':difference<0?'−':'')+Math.abs(difference).toFixed(1)+' pp';
-  const statusClass=reduction>0?'improving':reduction<0?'worsening':'steady';
-  const count=$('net-reduction'),percentage=$('availability-change');
-  count.className='metric-value '+statusClass;
-  percentage.className='metric-value '+(difference>0?'improving':difference<0?'worsening':'steady');
-  count.textContent=countLabel;
-  percentage.textContent=ppLabel;
-  $('net-reduction-detail').textContent=reduction>0?'Fewer customers without power':reduction<0?'More customers without power':'No net change reported';
-  const baselineTime=new Date(baseline.captured_at_utc).toLocaleString();
-  const stale=Number(current.stale_count)||0;
-  $('recovery-context').textContent='Compared with first capture ('+baselineTime+'). '+(stale?'Caution: '+stale+' of '+current.county_count+' county source records are over six hours old. ':'')+'Changes represent net reported outages, not independently verified utility restoration events.';
+  const delta=Number(current.percentage_with_power)-Number(baseline.percentage_with_power);
+  const signedCount=(reduction>0?'+':reduction<0?'−':'')+fmt(Math.abs(reduction));
+  const signedPP=(delta>0?'+':delta<0?'−':'')+Math.abs(delta).toFixed(1)+' pp';
+  const reductionClass=reduction>0?'improving':reduction<0?'worsening':'steady';
+  const deltaClass=delta>0?'improving':delta<0?'worsening':'steady';
+  $('net-reduction').textContent=signedCount;
+  $('net-reduction').className='region-value '+reductionClass;
+  $('net-reduction-detail').textContent=reduction>=0?'Net fewer outages':'Net additional outages';
+  $('availability-change').textContent=signedPP;
+  $('availability-change').className=deltaClass;
+  $('baseline-info').textContent='Since first capture: '+dtg(baseline.captured_at_utc);
 }
-function render(latest,history){if(latest.statewide){const w=latest.statewide;$('statewide-out').textContent=fmt(w.customers_out);$('statewide-details').textContent=pct(w.percentage_out)+' of '+fmt(w.customers_total)+' tracked customers · '+w.county_count+' counties · '+w.stale_count+' source records older than 6 hours · Collected '+new Date(w.captured_at_utc).toLocaleString();}$('status').textContent='Last collected: '+new Date(latest.retrieved_at_utc).toLocaleString()+' · '+latest.regional.stale_count+' source records older than 6 hours';
-$('summary').textContent=pct(latest.regional.percentage_with_power)+' with power · '+fmt(latest.regional.customers_out)+' without power · '+fmt(latest.regional.customers_total)+' tracked';lineChart(history);recoveryIndicators(latest,history);
-const root=$('counties');root.replaceChildren();for(const c of [...latest.counties].sort((a,b)=>a.percentage_with_power-b.percentage_with_power)){const wrapper=document.createElement('div');wrapper.className='bars';let h=document.createElement('div');h.className='row';let name=document.createElement('strong');name.textContent=c.county;let value=document.createElement('span');value.textContent=pct(c.percentage_with_power)+' with power';h.append(name,value);wrapper.append(h);
-for(const [v,cls] of [[c.previous_percentage_with_power,'prior'],[c.percentage_with_power,'']]){if(v==null)continue;const track=document.createElement('div'), fill=document.createElement('div');track.className='track';fill.className='fill '+cls;fill.style.width=Math.min(100,Math.max(0,Number(v)))+'%';track.append(fill);wrapper.append(track)}
-const detail=document.createElement('small');detail.className='sub';detail.textContent=fmt(c.customers_out)+' out · source updated '+new Date(c.source_updated_at_utc).toLocaleString()+(c.source_is_stale?' · STALE SOURCE':'');wrapper.append(detail);root.append(wrapper)}
+function updateCounties(counties){
+  const root=$('counties');root.replaceChildren();
+  for(const c of [...counties].sort((a,b)=>a.percentage_with_power-b.percentage_with_power)){
+    const wrapper=document.createElement('div');wrapper.className='county-bar';
+    const heading=document.createElement('div');heading.className='county-heading';
+    const name=document.createElement('span');name.textContent=c.county;
+    const value=document.createElement('span');value.textContent=pct(c.percentage_with_power)+' with power';
+    heading.append(name,value);wrapper.append(heading);
+    for(const [v,prior] of [[c.previous_percentage_with_power,true],[c.percentage_with_power,false]]){
+      if(v===null||v===undefined)continue;
+      const track=document.createElement('div'),fill=document.createElement('div');
+      track.className='bar-track';
+      fill.className='bar-fill'+(prior?' prior':'');
+      fill.style.width=Math.min(100,Math.max(0,Number(v)))+'%';
+      track.append(fill);wrapper.append(track);
+    }
+    const detail=document.createElement('div');detail.className='county-detail';
+    detail.textContent=fmt(c.customers_out)+' out · Updated '+dtg(c.source_updated_at_utc)+(c.source_is_stale?' · SOURCE >6H OLD':'');
+    wrapper.append(detail);root.append(wrapper);
+  }
 }
-Promise.all([fetch('data/latest.json?'+Date.now()),fetch('data/regional_history.json?'+Date.now())]).then(async ([a,b])=>{if(!a.ok||!b.ok)throw Error('Data not published yet');render(await a.json(),await b.json())}).catch(err=>$('status').textContent='Awaiting first successful collection: '+err.message);
-</script></main></html>
+function render(latest,history){
+  const r=latest.regional,w=latest.statewide;
+  $('status').textContent='Last collected: '+dtg(latest.retrieved_at_utc)+' · '+r.stale_count+
+    ' of '+r.county_count+' county source records older than 6 hours · Source reports may be delayed.';
+  if(w){
+    $('statewide-out').textContent=fmt(w.customers_out);
+    $('statewide-details').textContent=pct(w.percentage_out)+' of '+fmt(w.customers_total)+
+      ' tracked customers · '+w.county_count+' counties · '+w.stale_count+' source reports older than 6h';
+  }
+  updateRegional(latest,history);
+  trendChart(history);
+  updateCounties(latest.counties);
+}
+Promise.all([
+  fetch('data/latest.json?'+Date.now()),
+  fetch('data/regional_history.json?'+Date.now())
+]).then(async([latest,history])=>{
+  if(!latest.ok||!history.ok)throw new Error('FDEM data not published');
+  render(await latest.json(),await history.json());
+}).catch(err=>{
+  $('status').textContent='Data unavailable: '+err.message+' · Check GitHub Actions and the source feed.';
+});
+</script>
+</body>
+</html>
