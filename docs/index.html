@@ -69,14 +69,14 @@ a{color:#167447}
   </section>
   <section class="recovery-column" aria-label="FDEM outage and recovery charts">
     <div class="panel summary-card" id="statewide-panel">
-      <h2>Power Outages & Recovery</h2>
+      <h2>Power Status</h2>
       <div class="summary-stats">
         <div class="summary-stat">
-          <div class="eyebrow">Florida statewide · Without power</div>
+          <div class="eyebrow">Without Power</div>
           <div id="statewide-out" class="statewide-number">—</div>
         </div>
         <div class="summary-stat">
-          <div id="recovery-heading" class="eyebrow">Panhandle · Fewer without power</div>
+          <div id="recovery-heading" class="eyebrow">Power Restored (Net)</div>
           <div id="net-reduction" class="restored-number steady">—</div>
         </div>
       </div>
@@ -98,7 +98,7 @@ a{color:#167447}
       <a href="data/county_history.csv">County CSV</a>
       <details class="data-notes"><summary>Data and reporting notes</summary>
       <p>FDEM utility observations may be delayed or updated at different times by county. Net outage reduction is the change between collected records, not a count of independently confirmed utility restorations.</p>
-      <p>Percentages for the 12-county Panhandle area use its customer total. Florida statewide percentages use all 67 counties.</p></details>
+      <p>Without Power shows all 67 Florida counties; Power Restored (Net) shows the net reduction in reported outages across 12 Panhandle counties since the initial assessment. These are different geographic scopes. County power availability percentages use each county’s own customer total.</p></details>
     </footer>
   </section>
 </div>
@@ -193,8 +193,8 @@ function updateRegional(latest,history){
   $('net-reduction').textContent=direction+fmt(Math.abs(reduction));
   $('net-reduction').className='restored-number '+(reduction>0?'improving':reduction<0?'worsening':'steady');
   $('recovery-heading').textContent=reduction>=0?
-    'Panhandle · Fewer without power':
-    'Panhandle · More without power';
+    'Power Restored (Net)':
+    'Power Lost (Net)';
 }
 function parseCountyHistory(csv){
   const lines=csv.trim().split(/\r?\n/);
