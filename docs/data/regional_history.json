@@ -88,5 +88,11 @@
     "percentage_with_power": 76.0696,
     "customers_out": 204084,
     "stale_count": 6
+  },
+  {
+    "captured_at_utc": "2026-10-12T00:28:12Z",
+    "percentage_with_power": 76.0696,
+    "customers_out": 204084,
+    "stale_count": 6
   }
 ]
