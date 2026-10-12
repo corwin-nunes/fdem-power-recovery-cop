@@ -25,18 +25,17 @@ a{color:#167447}
 .map-frame{display:block;width:100%;height:clamp(490px,76vh,880px);border-radius:8px;overflow:hidden;background:#e6edf1}
 .recovery-column{display:flex;flex-direction:column;gap:10px}
 .eyebrow{font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.025em;color:#425967;line-height:1.4}
-.statewide-number{font-size:clamp(34px,3.4vw,47px);font-weight:760;color:#ac382c;line-height:1.08;margin:5px 0}
+.statewide-number{font-size:clamp(28px,2.8vw,44px);font-weight:760;color:#ac382c;line-height:1.08;margin:6px 0 0;font-variant-numeric:tabular-nums}
 .mini{color:#526674;font-size:11px;line-height:1.4;margin:0}
-.regional-card h2,.trend-card h2,.county-card h2{margin-bottom:10px}
-.region-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 8px}
-.region-metric{padding:9px 10px;background:#f3f6f7;border-radius:9px;min-width:0}
-.region-value{font-size:clamp(21px,2vw,27px);font-weight:750;line-height:1.15;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
-.region-label{font-size:11px;color:#536774;line-height:1.3;margin-top:4px}
+.summary-card h2{margin-bottom:12px}
+.summary-stats{display:grid;grid-template-columns:1fr 1fr;align-items:start;gap:14px}
+.summary-stat{min-width:0}
+.summary-stat+.summary-stat{border-left:1px solid #dfe6ea;padding-left:14px}
+.trend-card h2,.county-card h2{margin-bottom:10px}
 .improving{color:#25854a}
 .worsening{color:#b3372d}
 .steady{color:#506472}
-.restored-number{font-size:clamp(34px,3vw,45px);font-weight:750;line-height:1.1;font-variant-numeric:tabular-nums;margin:5px 0}
-#baseline-info{margin-top:3px}
+.restored-number{font-size:clamp(28px,2.8vw,44px);font-weight:750;line-height:1.08;font-variant-numeric:tabular-nums;margin:6px 0 0;white-space:nowrap}
 .trend-plot{display:block;width:100%;height:158px}
 .trend-card .mini{margin-top:1px}
 .county-card{margin-top:2px}
@@ -52,7 +51,7 @@ a{color:#167447}
 .data-notes{font-size:12px;color:#536774;margin-top:5px}
 .data-notes p{margin:6px 0}
 @media(max-width:1050px){.cop-layout{grid-template-columns:1fr}.map-panel{position:static}.map-frame{height:530px}.recovery-column{gap:12px}}
-@media(max-width:600px){main{padding:10px}.panel{padding:13px}.map-frame{height:470px}.region-metrics{grid-template-columns:1fr}}
+@media(max-width:600px){main{padding:10px}.panel{padding:13px}.map-frame{height:470px}.summary-stats{grid-template-columns:1fr}.summary-stat+.summary-stat{border-left:0;border-top:1px solid #dfe6ea;padding-left:0;padding-top:10px}}
 </style>
 </head>
 <body>
@@ -69,38 +68,29 @@ a{color:#167447}
     </div>
   </section>
   <section class="recovery-column" aria-label="FDEM outage and recovery charts">
-    <div class="panel" id="statewide-panel">
-      <div class="eyebrow">Florida statewide · Without power</div>
-      <div id="statewide-out" class="statewide-number">—</div>
-      <p id="statewide-details" class="mini">67-county FDEM total · Awaiting update</p>
-    </div>
-    <div class="panel regional-card">
-      <div class="eyebrow">Panhandle · Estimated restored (net)</div>
-      <div id="net-reduction" class="restored-number steady">—</div>
-      <p id="net-reduction-detail" class="mini">Net decrease in outages, not utility-confirmed restorations</p>
-      <div class="region-metrics">
-        <div class="region-metric">
-          <div id="region-availability" class="region-value">—</div>
-          <div class="region-label">With power</div>
+    <div class="panel summary-card" id="statewide-panel">
+      <h2>Power Outages & Recovery</h2>
+      <div class="summary-stats">
+        <div class="summary-stat">
+          <div class="eyebrow">Florida statewide · Without power</div>
+          <div id="statewide-out" class="statewide-number">—</div>
         </div>
-        <div class="region-metric">
-          <div id="region-out" class="region-value">—</div>
-          <div class="region-label">Without power</div>
+        <div class="summary-stat">
+          <div id="recovery-heading" class="eyebrow">Panhandle · Fewer without power</div>
+          <div id="net-reduction" class="restored-number steady">—</div>
         </div>
       </div>
-      <p id="regional-details" class="mini">12 counties · Awaiting update</p>
-      <p id="baseline-info" class="mini">Compared with initial assessment</p>
-    </div>
-    <div class="panel trend-card">
-      <h2>Regional recovery trend</h2>
-      <svg id="trend" class="trend-plot" viewBox="0 0 740 200" aria-label="Power availability trend with vertical collection-time markers" role="img"></svg>
-      <p class="mini">Vertical lines = collection times · Dashed = collection gap · Power availability</p>
     </div>
     <div class="panel county-card">
       <h2>County recovery details</h2>
       <p id="county-display-count" class="mini county-note"></p>
       <p id="county-comparison-note" class="mini county-note">Gray = initial · Green = latest</p>
       <div id="counties"></div>
+    </div>
+    <div class="panel trend-card">
+      <h2>Regional recovery trend</h2>
+      <svg id="trend" class="trend-plot" viewBox="0 0 740 200" aria-label="Power availability trend with vertical collection-time markers" role="img"></svg>
+      <p class="mini">Vertical lines = collection times · Dashed = collection gap · Power availability</p>
     </div>
     <footer class="data-links">
       <a href="data/latest.json">Latest JSON</a> ·
@@ -195,21 +185,16 @@ function trendChart(history){
   });
 }
 function updateRegional(latest,history){
-  const current=latest.regional;
-  $('region-availability').textContent=pct(current.percentage_with_power);
-  $('region-out').textContent=fmt(current.customers_out);
-  $('regional-details').textContent=fmt(current.customers_total)+' customers tracked · '+current.county_count+' counties';
   if(!Array.isArray(history)||!history.length)return;
   const baseline=history[0];
-  const reduction=Number(baseline.customers_out)-Number(current.customers_out);
-  const signedCount=(reduction>0?'+':reduction<0?'−':'')+fmt(Math.abs(reduction));
-  const reductionClass=reduction>0?'improving':reduction<0?'worsening':'steady';
-  $('net-reduction').textContent=signedCount;
-  $('net-reduction').className='restored-number '+reductionClass;
-  $('net-reduction-detail').textContent=reduction>=0?
-    'Net reduction in outages · not confirmed restorations':
-    'Net increase in outages · not confirmed restorations';
-  $('baseline-info').textContent='Since '+dtg(baseline.captured_at_utc)+' · 12-county Panhandle';
+  const reduction=Number(baseline.customers_out)-Number(latest.regional.customers_out);
+  if(!Number.isFinite(reduction))return;
+  const direction=reduction>0?'↑ ':reduction<0?'↓ ':'→ ';
+  $('net-reduction').textContent=direction+fmt(Math.abs(reduction));
+  $('net-reduction').className='restored-number '+(reduction>0?'improving':reduction<0?'worsening':'steady');
+  $('recovery-heading').textContent=reduction>=0?
+    'Panhandle · Fewer without power':
+    'Panhandle · More without power';
 }
 function parseCountyHistory(csv){
   const lines=csv.trim().split(/\r?\n/);
@@ -279,12 +264,8 @@ function updateCounties(counties,historyByCounty,capturedAt){
   }
 }
 function render(latest,history,countyHistory){
-  const r=latest.regional,w=latest.statewide;
-  if(w){
-    $('statewide-out').textContent=fmt(w.customers_out);
-    $('statewide-details').textContent=pct(w.percentage_out)+' of '+fmt(w.customers_total)+
-      ' tracked customers · '+w.county_count+' counties · '+w.stale_count+' source reports older than 6h';
-  }
+  const w=latest.statewide;
+  if(w)$('statewide-out').textContent=fmt(w.customers_out);
   updateRegional(latest,history);
   trendChart(history);
   updateCounties(latest.counties,countyHistory,latest.retrieved_at_utc);
@@ -299,7 +280,7 @@ Promise.all([
   render(await latest.json(),await history.json(),countyHistory);
 }).catch(err=>{
   $('statewide-out').textContent='Data unavailable';
-  $('statewide-details').textContent='Unable to retrieve FDEM data. Check GitHub Actions and the source feed.';
+  $('statewide-panel').title='Unable to retrieve FDEM data; check GitHub Actions and the source feed.';
 });
 </script>
 </body>
