@@ -40,13 +40,12 @@ a{color:#167447}
 .trend-card .mini{margin-top:1px}
 .county-card{margin-top:2px}
 .county-bar{margin:0 0 12px}
+.county-bar:last-child{margin-bottom:0}
 .county-heading{display:flex;justify-content:space-between;gap:12px;font-size:12px;font-weight:700;margin-bottom:4px}
 .county-heading span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
 .bar-track{height:9px;background:#e3e8ea;border-radius:3px;overflow:hidden;margin:3px 0}
 .bar-fill{height:100%;background:#269b57}
 .bar-fill.prior{background:#89959b}
-.county-detail{font-size:10.5px;color:#536774;line-height:1.4;margin-top:3px}
-.county-note{margin-bottom:10px}
 .data-links{font-size:12px;line-height:1.7;padding:2px 3px 12px}
 .data-notes{font-size:12px;color:#536774;margin-top:5px}
 .data-notes p{margin:6px 0}
@@ -83,8 +82,6 @@ a{color:#167447}
     </div>
     <div class="panel county-card">
       <h2>County recovery details</h2>
-      <p id="county-display-count" class="mini county-note"></p>
-      <p id="county-comparison-note" class="mini county-note">Gray = initial · Green = latest</p>
       <div id="counties"></div>
     </div>
     <div class="panel trend-card">
@@ -219,12 +216,7 @@ function parseCountyHistory(csv){
 function updateCounties(counties,historyByCounty,capturedAt){
   const root=$('counties');root.replaceChildren();
   const now=Date.parse(capturedAt);
-  const firstTimes=historyByCounty?[...historyByCounty.values()].filter(x=>x.length).map(x=>x[0].time):[];
-  const firstTime=firstTimes.length?Math.min(...firstTimes):null;
-  const initialText=firstTime!==null?dtg(new Date(firstTime).toISOString()):'unavailable';
-  $('county-comparison-note').textContent='Gray = '+initialText+' · Green = latest available';
   const shown=[];
-  let hidden=0;
   for(const c of [...counties].sort((a,b)=>a.percentage_with_power-b.percentage_with_power)){
     const entries=(historyByCounty?.get(c.county)||[]).filter(x=>x.time<=now);
     const hourMap=new Map();
@@ -234,12 +226,9 @@ function updateCounties(counties,historyByCounty,capturedAt){
     const recovered=lastHours.length>=2 &&
       ((c.customers_out===0&&lastHours.every(x=>x.out===0))||
        (Number(c.percentage_with_power)>=95&&lastHours.every(x=>x.value>=95)));
-    if(recovered){hidden++;continue;}
+    if(recovered)continue;
     shown.push({county:c,first:entries.length?entries[0]:null});
   }
-  $('county-display-count').textContent=
-    shown.length+' of '+counties.length+' counties shown · '+
-    hidden+' stable at ≥95% with power or 0 outages across 2 different collection hours';
   for(const item of shown){
     const c=item.county,first=item.first;
     const wrapper=document.createElement('div');wrapper.className='county-bar';
@@ -250,17 +239,15 @@ function updateCounties(counties,historyByCounty,capturedAt){
     for(const [v,prior] of [[first?.value,true],[c.percentage_with_power,false]]){
       if(v===null||v===undefined)continue;
       const track=document.createElement('div'),fill=document.createElement('div');
-      track.className='bar-track';fill.className='bar-fill'+(prior?' prior':'');
+      track.className='bar-track';
+      track.setAttribute('role','img');
+      track.setAttribute('aria-label',(prior?'Initial':'Latest')+' power availability for '+c.county+': '+pct(v));
+      track.title=(prior?'Initial':'Latest')+': '+pct(v)+' with power';
+      fill.className='bar-fill'+(prior?' prior':'');
       fill.style.width=Math.min(100,Math.max(0,Number(v)))+'%';
       track.append(fill);wrapper.append(track);
     }
-    const detail=document.createElement('div');detail.className='county-detail';
-    const diff=first?first.out-Number(c.customers_out):null;
-    const progress=diff===null?'':fmt(Math.abs(diff))+
-      (diff>0?' fewer outages':diff<0?' more outages':' change in outages')+' since initial · ';
-    detail.textContent=fmt(c.customers_out)+' out · '+progress+
-      'Updated '+dtg(c.source_updated_at_utc)+(c.source_is_stale?' · STALE SOURCE':'');
-    wrapper.append(detail);root.append(wrapper);
+    root.append(wrapper);
   }
 }
 function render(latest,history,countyHistory){
