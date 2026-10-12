@@ -27,19 +27,19 @@ a{color:#167447}
 .eyebrow{font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.025em;color:#425967;line-height:1.4}
 .statewide-number{font-size:clamp(28px,2.8vw,44px);font-weight:760;color:#ac382c;line-height:1.08;margin:6px 0 0;font-variant-numeric:tabular-nums}
 .mini{color:#526674;font-size:11px;line-height:1.4;margin:0}
-.summary-card h2{margin-bottom:12px}
+.summary-card{padding-top:13px;padding-bottom:13px}
 .summary-stats{display:grid;grid-template-columns:1fr 1fr;align-items:start;gap:14px}
 .summary-stat{min-width:0}
 .summary-stat+.summary-stat{border-left:1px solid #dfe6ea;padding-left:14px}
-.trend-card h2,.county-card h2{margin-bottom:10px}
+.trend-card h2{margin-bottom:7px}
 .improving{color:#25854a}
 .worsening{color:#b3372d}
 .steady{color:#506472}
 .restored-number{font-size:clamp(28px,2.8vw,44px);font-weight:750;line-height:1.08;font-variant-numeric:tabular-nums;margin:6px 0 0;white-space:nowrap}
-.trend-plot{display:block;width:100%;height:158px}
+.trend-plot{display:block;width:100%;height:145px}
 .trend-card .mini{margin-top:1px}
-.county-card{margin-top:2px}
-.county-bar{margin:0 0 12px}
+.county-card{margin-top:0}
+.county-bar{margin:0 0 8px}
 .county-bar:last-child{margin-bottom:0}
 .county-heading{display:flex;justify-content:space-between;gap:12px;font-size:12px;font-weight:700;margin-bottom:4px}
 .county-heading span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -67,8 +67,7 @@ a{color:#167447}
     </div>
   </section>
   <section class="recovery-column" aria-label="FDEM outage and recovery charts">
-    <div class="panel summary-card" id="statewide-panel">
-      <h2>Power Status</h2>
+    <div class="panel summary-card" id="statewide-panel" aria-label="Power status">
       <div class="summary-stats">
         <div class="summary-stat">
           <div class="eyebrow">Without Power</div>
@@ -80,12 +79,11 @@ a{color:#167447}
         </div>
       </div>
     </div>
-    <div class="panel county-card">
-      <h2>County recovery details</h2>
+    <div class="panel county-card" aria-label="County recovery details">
       <div id="counties"></div>
     </div>
     <div class="panel trend-card">
-      <h2>Regional recovery trend</h2>
+      <h2>Recovery Update Tracker</h2>
       <svg id="trend" class="trend-plot" viewBox="0 0 740 200" aria-label="Power availability trend with vertical collection-time markers" role="img"></svg>
       <p class="mini">Vertical lines = collection times · Dashed = collection gap · Power availability</p>
     </div>
