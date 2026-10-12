@@ -9,45 +9,45 @@
 :root{color-scheme:light}
 *{box-sizing:border-box}
 body{margin:0;background:#f1f4f6;color:#183041;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:1800px;margin:0 auto;padding:14px 18px 20px}
+main{max-width:1800px;margin:0 auto;padding:10px 14px 16px}
 h1,h2,h3,p{margin-top:0}
 h1{font-size:clamp(22px,2vw,29px);line-height:1.18;margin-bottom:5px}
-h2{font-size:19px;line-height:1.2;margin-bottom:12px}
+h2{font-size:17px;line-height:1.2;margin-bottom:9px}
 a{color:#167447}
-.cop-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(365px,2fr);gap:15px;align-items:stretch}
+.cop-layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(365px,2fr);gap:12px;align-items:stretch}
 .map-column,.recovery-column{min-width:0}
 .map-column{align-self:stretch}
 .map-panel{position:sticky;top:12px}
-.panel{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 2px rgba(13,31,47,.035)}
+.panel{background:#fff;border-radius:12px;padding:14px;box-shadow:0 1px 2px rgba(13,31,47,.035)}
 .map-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
 .map-heading h2{margin:0}
 .map-heading a{font-size:12px;white-space:nowrap}
 .map-frame{display:block;width:100%;height:clamp(490px,76vh,880px);border-radius:8px;overflow:hidden;background:#e6edf1}
-.recovery-column{display:flex;flex-direction:column;gap:12px}
-.eyebrow{font-size:12px;font-weight:750;text-transform:uppercase;letter-spacing:.025em;color:#425967;line-height:1.4}
-.statewide-number{font-size:clamp(33px,3.6vw,49px);font-weight:760;color:#ac382c;line-height:1.18;margin:7px 0}
-.mini{color:#526674;font-size:12px;line-height:1.45;margin:0}
+.recovery-column{display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.025em;color:#425967;line-height:1.4}
+.statewide-number{font-size:clamp(34px,3.4vw,47px);font-weight:760;color:#ac382c;line-height:1.08;margin:5px 0}
+.mini{color:#526674;font-size:11px;line-height:1.4;margin:0}
 .regional-card h2,.trend-card h2,.county-card h2{margin-bottom:10px}
-.region-metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.region-metric{padding:11px 12px;background:#f3f6f7;border-radius:9px;min-width:0}
-.region-value{font-size:clamp(26px,2.5vw,37px);font-weight:750;line-height:1.15;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
-.region-label{font-size:12px;color:#536774;line-height:1.3;margin-top:5px}
+.region-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 8px}
+.region-metric{padding:9px 10px;background:#f3f6f7;border-radius:9px;min-width:0}
+.region-value{font-size:clamp(21px,2vw,27px);font-weight:750;line-height:1.15;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.region-label{font-size:11px;color:#536774;line-height:1.3;margin-top:4px}
 .improving{color:#25854a}
 .worsening{color:#b3372d}
 .steady{color:#506472}
-.change-line{margin:12px 0 7px;font-size:13px;color:#4b6170}
-.change-line strong{font-size:20px;margin-right:6px;font-variant-numeric:tabular-nums}
-.trend-plot{display:block;width:100%;height:175px}
+.restored-number{font-size:clamp(34px,3vw,45px);font-weight:750;line-height:1.1;font-variant-numeric:tabular-nums;margin:5px 0}
+#baseline-info{margin-top:3px}
+.trend-plot{display:block;width:100%;height:158px}
 .trend-card .mini{margin-top:1px}
 .county-card{margin-top:2px}
-.county-bar{margin:0 0 16px}
-.county-heading{display:flex;justify-content:space-between;gap:12px;font-size:13px;font-weight:700;margin-bottom:5px}
+.county-bar{margin:0 0 12px}
+.county-heading{display:flex;justify-content:space-between;gap:12px;font-size:12px;font-weight:700;margin-bottom:4px}
 .county-heading span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
-.bar-track{height:11px;background:#e3e8ea;border-radius:3px;overflow:hidden;margin:3px 0}
+.bar-track{height:9px;background:#e3e8ea;border-radius:3px;overflow:hidden;margin:3px 0}
 .bar-fill{height:100%;background:#269b57}
 .bar-fill.prior{background:#89959b}
-.county-detail{font-size:11px;color:#536774;line-height:1.4;margin-top:5px}
-.county-note{margin-bottom:14px}
+.county-detail{font-size:10.5px;color:#536774;line-height:1.4;margin-top:3px}
+.county-note{margin-bottom:10px}
 .data-links{font-size:12px;line-height:1.7;padding:2px 3px 12px}
 .data-notes{font-size:12px;color:#536774;margin-top:5px}
 .data-notes p{margin:6px 0}
@@ -70,34 +70,36 @@ a{color:#167447}
   </section>
   <section class="recovery-column" aria-label="FDEM outage and recovery charts">
     <div class="panel" id="statewide-panel">
-      <div class="eyebrow">Florida statewide · Customers without power</div>
+      <div class="eyebrow">Florida statewide · Without power</div>
       <div id="statewide-out" class="statewide-number">—</div>
       <p id="statewide-details" class="mini">67-county FDEM total · Awaiting update</p>
     </div>
     <div class="panel regional-card">
-      <h2>Panhandle · Power recovery</h2>
+      <div class="eyebrow">Panhandle · Estimated restored (net)</div>
+      <div id="net-reduction" class="restored-number steady">—</div>
+      <p id="net-reduction-detail" class="mini">Net decrease in outages, not utility-confirmed restorations</p>
       <div class="region-metrics">
         <div class="region-metric">
           <div id="region-availability" class="region-value">—</div>
-          <div class="region-label">Customers with power</div>
+          <div class="region-label">With power</div>
         </div>
         <div class="region-metric">
-          <div id="net-reduction" class="region-value steady">—</div>
-          <div id="net-reduction-detail" class="region-label">Net fewer outages</div>
+          <div id="region-out" class="region-value">—</div>
+          <div class="region-label">Without power</div>
         </div>
       </div>
-      <p class="change-line"><strong id="availability-change" class="steady">—</strong> Change in power availability since initial assessment</p>
-      <p id="regional-details" class="mini">12 selected counties · Awaiting update</p>
-      <p id="baseline-info" class="mini" style="margin-top:3px">Comparing with first saved observation</p>
+      <p id="regional-details" class="mini">12 counties · Awaiting update</p>
+      <p id="baseline-info" class="mini">Compared with initial assessment</p>
     </div>
     <div class="panel trend-card">
       <h2>Regional recovery trend</h2>
-      <svg id="trend" class="trend-plot" viewBox="0 0 740 210" aria-label="Power availability over time, hourly FDEM observations" role="img"></svg>
-      <p class="mini">Latest observation per hour · Dashed line = gap in collection history · Net power availability, not confirmed individual restorations</p>
+      <svg id="trend" class="trend-plot" viewBox="0 0 740 200" aria-label="Power availability trend with vertical collection-time markers" role="img"></svg>
+      <p class="mini">Vertical lines = collection times · Dashed = collection gap · Power availability</p>
     </div>
     <div class="panel county-card">
       <h2>County recovery details</h2>
-      <p id="county-comparison-note" class="mini county-note">Gray = initial assessment · Green = latest valid power availability</p>
+      <p id="county-display-count" class="mini county-note"></p>
+      <p id="county-comparison-note" class="mini county-note">Gray = initial · Green = latest</p>
       <div id="counties"></div>
     </div>
     <footer class="data-links">
@@ -135,84 +137,96 @@ function trendChart(history){
     if(label!==undefined)e.textContent=label;
     parent.appendChild(e);return e;
   };
-  // Keep every original collection in the CSV. Only simplify chart display.
-  // Group observations into clock-hour buckets and retain the final capture per hour.
+  // Last observation within each unique UTC collection hour; original records remain archived.
   const hours=new Map();
-  for(const r of history){
-    const at=Date.parse(r.captured_at_utc);
-    const availability=Number(r.percentage_with_power);
+  for(const record of history){
+    const at=Date.parse(record.captured_at_utc);
+    const availability=Number(record.percentage_with_power);
     if(!Number.isFinite(at)||!Number.isFinite(availability))continue;
-    const hour=Math.floor(at/3600000);
-    const existing=hours.get(hour);
-    if(!existing||at>existing.at)hours.set(hour,{hour,at,availability,record:r});
+    const bucket=Math.floor(at/3600000);
+    const previous=hours.get(bucket);
+    if(!previous||at>previous.at)hours.set(bucket,{bucket,at,availability,record});
   }
-  const points=[...hours.values()].sort((a,b)=>a.hour-b.hour).slice(-72);
+  const points=[...hours.values()].sort((a,b)=>a.at-b.at).slice(-72);
   if(!points.length)return;
-  const start=points[0].hour,end=points[points.length-1].hour;
-  const x=hour=>start===end?388:52+(hour-start)/(end-start)*672;
-  const y=value=>162-1.35*value;
+  const first=points[0].at,last=points[points.length-1].at;
+  const x=at=>first===last?388:54+(at-first)/(last-first)*664;
+  const y=value=>155-1.28*value;
   for(let v=0;v<=100;v+=25){
     const yy=y(v);
-    make('line',{x1:52,x2:724,y1:yy,y2:yy,stroke:'#dce7ea'});
-    make('text',{x:45,y:yy+4,'font-size':11,'text-anchor':'end',fill:'#566976'},v+'%');
+    make('line',{x1:54,x2:718,y1:yy,y2:yy,stroke:'#dae4e8','stroke-width':1});
+    make('text',{x:46,y:yy+3,'font-size':11,'text-anchor':'end',fill:'#526674'},v+'%');
   }
-  // Clock-hour labels rather than snapshots taken minutes apart.
-  const tickHours=start===end?[start]:[0,1,2,3,4].map(i=>start+Math.round((end-start)*i/4));
-  [...new Set(tickHours)].forEach((hour,i,arr)=>{
-    make('text',{
-      x:x(hour),y:190,'font-size':10,fill:'#526674',
-      'text-anchor':i===0?'start':i===arr.length-1?'end':'middle'
-    },dtg(new Date(hour*3600000).toISOString()));
-  });
+  // Vertical guides show actual saved collection times, not inferred utility update times.
+  for(const point of points){
+    make('line',{
+      x1:x(point.at),x2:x(point.at),y1:27,y2:155,
+      stroke:'#b7c5cc','stroke-width':1,'stroke-dasharray':'2 4',opacity:0.65
+    });
+  }
   for(let i=1;i<points.length;i++){
     const a=points[i-1],b=points[i];
-    const gap=b.hour-a.hour;
+    const gap=b.bucket-a.bucket;
     make('line',{
-      x1:x(a.hour),y1:y(a.availability),x2:x(b.hour),y2:y(b.availability),
-      stroke:'#269b57','stroke-width':3,
+      x1:x(a.at),y1:y(a.availability),x2:x(b.at),y2:y(b.availability),
+      stroke:'#269b57','stroke-width':2.5,
       ...(gap>1?{'stroke-dasharray':'6 5'}:{})
     });
   }
-  for(const p of points){
-    const circle=make('circle',{cx:x(p.hour),cy:y(p.availability),r:4,fill:'#269b57'});
+  points.forEach(p=>{
+    const circle=make('circle',{cx:x(p.at),cy:y(p.availability),r:3.2,fill:'#269b57'});
     make('title',{},dtg(p.record.captured_at_utc)+' · '+p.availability.toFixed(1)+'% with power',circle);
+  });
+  // Pick labels from actual observations, retaining endpoints and avoiding overlap.
+  const minSpace=140;
+  const chosen=[points[0]];
+  for(let i=1;i<points.length-1;i++){
+    const p=points[i];
+    if(x(p.at)-x(chosen[chosen.length-1].at)>=minSpace&&x(last)-x(p.at)>=minSpace){
+      chosen.push(p);
+    }
   }
+  if(points.length>1)chosen.push(points[points.length-1]);
+  chosen.forEach((p,i)=>{
+    make('text',{
+      x:x(p.at),y:185,'font-size':10,fill:'#526674',
+      'text-anchor':i===0?'start':i===chosen.length-1?'end':'middle'
+    },dtg(p.record.captured_at_utc));
+  });
 }
 function updateRegional(latest,history){
   const current=latest.regional;
   $('region-availability').textContent=pct(current.percentage_with_power);
-  $('regional-details').textContent=fmt(current.customers_out)+' currently out · '+fmt(current.customers_total)+' tracked · '+current.county_count+' counties';
-  if(!Array.isArray(history)||history.length===0)return;
+  $('region-out').textContent=fmt(current.customers_out);
+  $('regional-details').textContent=fmt(current.customers_total)+' customers tracked · '+current.county_count+' counties';
+  if(!Array.isArray(history)||!history.length)return;
   const baseline=history[0];
   const reduction=Number(baseline.customers_out)-Number(current.customers_out);
-  const delta=Number(current.percentage_with_power)-Number(baseline.percentage_with_power);
   const signedCount=(reduction>0?'+':reduction<0?'−':'')+fmt(Math.abs(reduction));
-  const signedPP=(delta>0?'+':delta<0?'−':'')+Math.abs(delta).toFixed(1)+' pp';
   const reductionClass=reduction>0?'improving':reduction<0?'worsening':'steady';
-  const deltaClass=delta>0?'improving':delta<0?'worsening':'steady';
   $('net-reduction').textContent=signedCount;
-  $('net-reduction').className='region-value '+reductionClass;
-  $('net-reduction-detail').textContent=reduction>=0?'Net fewer outages':'Net additional outages';
-  $('availability-change').textContent=signedPP;
-  $('availability-change').className=deltaClass;
-  $('baseline-info').textContent='Since first capture: '+dtg(baseline.captured_at_utc);
+  $('net-reduction').className='restored-number '+reductionClass;
+  $('net-reduction-detail').textContent=reduction>=0?
+    'Net reduction in outages · not confirmed restorations':
+    'Net increase in outages · not confirmed restorations';
+  $('baseline-info').textContent='Since '+dtg(baseline.captured_at_utc)+' · 12-county Panhandle';
 }
 function parseCountyHistory(csv){
   const lines=csv.trim().split(/\r?\n/);
   const headers=(lines.shift()||'').split(',');
   const countyCol=headers.indexOf('county'),timeCol=headers.indexOf('captured_at_utc'),
-    valueCol=headers.indexOf('percentage_with_power');
-  if(countyCol<0||timeCol<0||valueCol<0)return null;
+    valueCol=headers.indexOf('percentage_with_power'),outCol=headers.indexOf('customers_out');
+  if(countyCol<0||timeCol<0||valueCol<0||outCol<0)return null;
   const byCounty=new Map();
   for(const line of lines){
     if(!line.trim())continue;
     const cells=line.split(',');
     const county=cells[countyCol];
     const time=Date.parse(cells[timeCol]);
-    const value=Number(cells[valueCol]);
-    if(!county||!Number.isFinite(time)||!Number.isFinite(value))continue;
+    const value=Number(cells[valueCol]),out=Number(cells[outCol]);
+    if(!county||!Number.isFinite(time)||!Number.isFinite(value)||!Number.isFinite(out))continue;
     if(!byCounty.has(county))byCounty.set(county,[]);
-    byCounty.get(county).push({time,value});
+    byCounty.get(county).push({time,value,out});
   }
   for(const list of byCounty.values())list.sort((a,b)=>a.time-b.time);
   return byCounty;
@@ -222,20 +236,33 @@ function updateCounties(counties,historyByCounty,capturedAt){
   const now=Date.parse(capturedAt);
   const firstTimes=historyByCounty?[...historyByCounty.values()].filter(x=>x.length).map(x=>x[0].time):[];
   const firstTime=firstTimes.length?Math.min(...firstTimes):null;
-  $('county-comparison-note').textContent=
-    (firstTime!==null?'Gray = initial assessment ('+dtg(new Date(firstTime).toISOString())+')':
-      'Gray = initial assessment unavailable')+
-    ' · Green = latest valid assessment'+
-    (historyByCounty?'':' · County history temporarily unavailable');
+  const initialText=firstTime!==null?dtg(new Date(firstTime).toISOString()):'unavailable';
+  $('county-comparison-note').textContent='Gray = '+initialText+' · Green = latest available';
+  const shown=[];
+  let hidden=0;
   for(const c of [...counties].sort((a,b)=>a.percentage_with_power-b.percentage_with_power)){
+    const entries=(historyByCounty?.get(c.county)||[]).filter(x=>x.time<=now);
+    const hourMap=new Map();
+    for(const e of entries)hourMap.set(Math.floor(e.time/3600000),e);
+    const lastHours=[...hourMap.entries()].sort((a,b)=>a[0]-b[0]).slice(-2).map(x=>x[1]);
+    // Repeated manual runs within the same hour cannot satisfy the stability rule.
+    const recovered=lastHours.length>=2 &&
+      ((c.customers_out===0&&lastHours.every(x=>x.out===0))||
+       (Number(c.percentage_with_power)>=95&&lastHours.every(x=>x.value>=95)));
+    if(recovered){hidden++;continue;}
+    shown.push({county:c,first:entries.length?entries[0]:null});
+  }
+  $('county-display-count').textContent=
+    shown.length+' of '+counties.length+' counties shown · '+
+    hidden+' stable at ≥95% with power or 0 outages across 2 different collection hours';
+  for(const item of shown){
+    const c=item.county,first=item.first;
     const wrapper=document.createElement('div');wrapper.className='county-bar';
     const heading=document.createElement('div');heading.className='county-heading';
     const name=document.createElement('span');name.textContent=c.county;
     const value=document.createElement('span');value.textContent=pct(c.percentage_with_power)+' with power';
     heading.append(name,value);wrapper.append(heading);
-    const list=(historyByCounty?.get(c.county)||[]).filter(x=>x.time<=now);
-    const previous=list.length?list[0]:null;
-    for(const [v,prior] of [[previous?.value,true],[c.percentage_with_power,false]]){
+    for(const [v,prior] of [[first?.value,true],[c.percentage_with_power,false]]){
       if(v===null||v===undefined)continue;
       const track=document.createElement('div'),fill=document.createElement('div');
       track.className='bar-track';fill.className='bar-fill'+(prior?' prior':'');
@@ -243,9 +270,11 @@ function updateCounties(counties,historyByCounty,capturedAt){
       track.append(fill);wrapper.append(track);
     }
     const detail=document.createElement('div');detail.className='county-detail';
-    const delta=previous?Number(c.percentage_with_power)-previous.value:null;
-    const movement=delta===null?'':(delta>0?'+':delta<0?'−':'')+Math.abs(delta).toFixed(1)+' pp since initial · ';
-    detail.textContent=fmt(c.customers_out)+' out · '+movement+'Updated '+dtg(c.source_updated_at_utc)+(c.source_is_stale?' · SOURCE >6H OLD':'');
+    const diff=first?first.out-Number(c.customers_out):null;
+    const progress=diff===null?'':fmt(Math.abs(diff))+
+      (diff>0?' fewer outages':diff<0?' more outages':' change in outages')+' since initial · ';
+    detail.textContent=fmt(c.customers_out)+' out · '+progress+
+      'Updated '+dtg(c.source_updated_at_utc)+(c.source_is_stale?' · STALE SOURCE':'');
     wrapper.append(detail);root.append(wrapper);
   }
 }
